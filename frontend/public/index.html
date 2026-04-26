@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseNews — Live & Breaking</title>
+<meta name="description" content="PulseNews - Truth. Speed. Depth. Your source for breaking news and in-depth coverage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- BREAKING TICKER -->
+<div class="ticker-bar" id="tickerBar">
+  <div class="ticker-inner">
+    <div class="ticker-label">⚡ LIVE</div>
+    <div class="ticker-scroll">
+      <div class="ticker-track" id="tickerTrack">
+        <span class="ticker-item">Loading breaking news...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="masthead">
+  <div class="container">
+    <div class="masthead-top">
+      <div class="masthead-meta" id="currentDate"></div>
+      <div class="logo">
+        <h1 onclick="navigate('home')" style="cursor:pointer">Pulse<span>News</span></h1>
+        <div class="logo-tagline" id="logoTagline">Truth · Speed · Depth</div>
+      </div>
+      <div class="masthead-actions">
+        <button class="btn btn-icon btn-ghost" onclick="toggleSearch()" title="Search" aria-label="Search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <button class="btn btn-icon btn-ghost" onclick="toggleTheme()" id="themeBtn" title="Toggle theme" aria-label="Toggle dark mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="themeIcon"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <div id="authButtons">
+          <button class="btn btn-ghost" onclick="showModal('loginModal')">Sign In</button>
+          <button class="btn btn-primary" onclick="showModal('registerModal')">Join Free</button>
+        </div>
+        <div id="userMenu" style="display:none">
+          <div class="user-avatar-btn" onclick="toggleUserDropdown()">
+            <div class="avatar-circle" id="avatarCircle">U</div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="user-dropdown" id="userDropdown" style="display:none">
+            <div class="dropdown-header">
+              <div class="avatar-circle lg" id="dropAvatarCircle">U</div>
+              <div>
+                <div class="dropdown-name" id="dropUserName">User</div>
+                <div class="dropdown-email" id="dropUserEmail">user@email.com</div>
+              </div>
+            </div>
+            <a onclick="navigate('saved')">📑 Saved Articles</a>
+            <a onclick="navigate('profile')">⚙️ Profile</a>
+            <a onclick="navigate('admin')" id="adminLink" style="display:none">🛡️ Admin Panel</a>
+            <a onclick="logout()" class="danger">🚪 Sign Out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav" id="mainNav" role="navigation" aria-label="Main navigation">
+      <button class="nav-link active" onclick="navigate('home')" data-nav="home">Home</button>
+      <div id="categoryNav"></div>
+      <button class="nav-link" onclick="navigate('trending')">🔥 Trending</button>
+    </nav>
+  </div>
+</header>
+
+<!-- SEARCH BAR -->
+<div class="search-overlay" id="searchOverlay" style="display:none">
+  <div class="search-box">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search articles, topics, authors..." autofocus oninput="debounceSearch(this.value)">
+    <button onclick="toggleSearch()" class="search-close">✕</button>
+  </div>
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="main-container" id="mainContent">
+  <!-- Pages rendered by JS -->
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3 class="footer-logo">Pulse<span>News</span></h3>
+        <p>Truth. Speed. Depth. Your trusted source for breaking news and in-depth analysis from around the world.</p>
+        <div class="social-links" id="footerSocial"></div>
+      </div>
+      <div>
+        <h4>Categories</h4>
+        <ul id="footerCategories"></ul>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a onclick="navigate('home')">Home</a></li>
+          <li><a onclick="navigate('trending')">Trending</a></li>
+          <li><a onclick="showModal('loginModal')">Sign In</a></li>
+          <li><a onclick="showModal('registerModal')">Join Free</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Newsletter</h4>
+        <p>Stay informed. Get top stories delivered daily.</p>
+        <div class="newsletter-form">
+          <input type="email" id="newsletterEmail" placeholder="Your email address">
+          <button onclick="subscribeNewsletter()" class="btn btn-primary">Subscribe</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span id="footerCopy">© 2025 PulseNews. All rights reserved.</span>
+      <span>Built with ❤️ for journalism</span>
+    </div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="loginModal" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="hideModal('loginModal')">✕</button>
+    <h2>Welcome Back</h2>
+    <p style="color:var(--ink-light);margin-bottom:24px">Sign in to your PulseNews account</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Your password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">Sign In</button>
+    </form>
+    <p class="modal-switch">Don't have an account? <a onclick="switchModal('loginModal','registerModal')">Create one free</a></p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="registerModal" style="display:none">
+  <div class="modal">
+    <button class="modal-close" onclick="hideModal('registerModal')">✕</button>
+    <h2>Join PulseNews</h2>
+    <p style="color:var(--ink-light);margin-bottom:24px">Create your free account today</p>
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your full name" required>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Min. 6 characters" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary w-full">Create Account</button>
+    </form>
+    <p class="modal-switch">Already have an account? <a onclick="switchModal('registerModal','loginModal')">Sign in</a></p>
+  </div>
+</div>
+
+<!-- ARTICLE WRITE MODAL (Admin) -->
+<div class="modal-overlay" id="articleModal" style="display:none">
+  <div class="modal modal-wide">
+    <button class="modal-close" onclick="hideModal('articleModal')">✕</button>
+    <h2 id="articleModalTitle">Write Article</h2>
+    <form onsubmit="handleSaveArticle(event)">
+      <input type="hidden" id="editArticleId">
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label>Title *</label>
+          <input type="text" id="articleTitle" placeholder="Compelling headline..." required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="articleCategory"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Excerpt (short summary)</label>
+        <textarea id="articleExcerpt" rows="2" placeholder="Brief description shown in listings..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Cover Image URL</label>
+        <input type="url" id="articleImage" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>Content * (HTML supported)</label>
+        <textarea id="articleContent" rows="12" placeholder="Full article content. You can use HTML tags like <p>, <h2>, <strong>, <ul>..." required></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="articleTags" placeholder="politics, world, breaking">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="articleStatus">
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-checkboxes">
+        <label class="checkbox-label"><input type="checkbox" id="articleFeatured"> ⭐ Featured Article</label>
+        <label class="checkbox-label"><input type="checkbox" id="articleBreaking"> 🔴 Breaking News</label>
+      </div>
+      <div class="form-actions">
+        <button type="button" onclick="hideModal('articleModal')" class="btn btn-ghost">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Article</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

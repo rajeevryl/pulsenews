@@ -1,0 +1,13 @@
+{
+  "name": "pulsenews",
+  "version": "1.0.0",
+  "description": "PulseNews - Full Stack News Website",
+  "scripts": {
+    "install:all": "cd backend && npm install",
+    "start": "cd backend && node server.js",
+    "dev": "cd backend && npx nodemon server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
