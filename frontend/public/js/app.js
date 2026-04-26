@@ -481,6 +481,18 @@ async function renderArticlePage(slug) {
 
           ${a.cover_image ? `<img src="${a.cover_image}" class="article-hero-img" alt="${a.title}" onerror="this.style.display='none'">` : ''}
 
+${a.video ? `
+  <div style="margin:20px 0">
+    <iframe 
+      width="100%" 
+      height="400" 
+      src="${a.video}" 
+      frameborder="0" 
+      allowfullscreen>
+    </iframe>
+  </div>
+` : ''}
+
           <div class="article-body">${a.content || ''}</div>
 
           ${(a.tags || []).length ? `
