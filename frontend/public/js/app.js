@@ -1,6 +1,6 @@
 /* ── PulseNews Frontend App ─────────────────────────────────────────────── */
 
-const API = '/api';
+const API = 'https://pulsenews-1td9.onrender.com/api';
 let state = {
   user: null,
   token: localStorage.getItem('pn_token'),
