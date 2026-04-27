@@ -1084,41 +1084,56 @@ function populateArticleCategorySelect(selectedId = '') {
 async function handleSaveArticle(e) {
   e.preventDefault();
 
-  const body = {
-    title: document.getElementById('articleTitle').value,
-    subheading: document.getElementById('articleSubheading').value, // ✅ NEW
-    content: document.getElementById('articleContent').value,
-    cover_image: document.getElementById('articleImage').value,
-    video: document.getElementById('articleVideo').value, // ✅ NEW
+  let content = document.getElementById('articleContent').value;
+  content = content.replace(/<[^>]*>/g, '').trim();
 
-    // keep old if you want
+  const body = {
+    title: document.getElementById('articleTitle').value.trim(),
+    subheading: document.getElementById('articleSubheading').value,
+    content: content,
+    cover_image: document.getElementById('articleImage').value,
+    video: document.getElementById('articleVideo').value,
     excerpt: document.getElementById('articleExcerpt')?.value || '',
-    category_id: document.getElementById('articleCategory')?.value || null,
+    category_id: document.getElementById('articleCategory')?.value || '',
     tags: document.getElementById('articleTags')?.value
       ?.split(',')
       .map(t => t.trim())
       .filter(Boolean) || [],
-
     is_featured: document.getElementById('articleFeatured')?.checked || false,
     is_breaking: document.getElementById('articleBreaking')?.checked || false,
     status: document.getElementById('articleStatus')?.value || 'published',
   };
 
   try {
-    const r = await apiFetch('/news', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    const slug = document.getElementById('editArticleId').value;
+
+    let r;
+
+    if (slug) {
+      // UPDATE
+      r = await apiFetch(`/news/slug/${slug}`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+    } else {
+      // CREATE
+      r = await apiFetch('/news', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+    }
 
     const data = await r.json();
 
     if (r.ok) {
-      showToast('Article published!', 'success');
+      showToast(slug ? 'Article updated!' : 'Article added!', 'success');
       renderAdminPage('articles');
     } else {
       showToast(data.error || 'Failed', 'error');
     }
+
   } catch (err) {
+    console.error(err);
     showToast('Server error', 'error');
   }
 }
@@ -1256,6 +1271,58 @@ function formatNum(n) {
 
 function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function deleteArticle(slug) {
+  if (!confirm('Delete this article?')) return;
+
+  try {
+    const r = await apiFetch(`/news/slug/${slug}`, {
+      method: 'DELETE',
+    });
+
+    const data = await r.json();
+
+    if (r.ok) {
+      showToast('Deleted successfully!', 'success');
+      renderAdminPage('articles');
+    } else {
+      showToast(data.error || 'Delete failed', 'error');
+    }
+  } catch (err) {
+    showToast('Server error', 'error');
+  }
+}
+
+async function updateArticle(slug) {
+  let content = document.getElementById('articleContent').value;
+  content = content.replace(/<[^>]*>/g, '').trim();
+
+  const body = {
+    title: document.getElementById('articleTitle').value.trim(),
+    subheading: document.getElementById('articleSubheading').value,
+    content: content,
+    cover_image: document.getElementById('articleImage').value,
+    video: document.getElementById('articleVideo').value,
+  };
+
+  try {
+    const r = await apiFetch(`/news/slug/${slug}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+
+    const data = await r.json();
+
+    if (r.ok) {
+      showToast('Updated successfully!', 'success');
+      renderAdminPage('articles');
+    } else {
+      showToast(data.error || 'Update failed', 'error');
+    }
+  } catch (err) {
+    showToast('Server error', 'error');
+  }
 }
 
 function renderError(msg) {
