@@ -20,10 +20,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ GET SINGLE ARTICLE BY SLUG
+// ✅ GET SINGLE ARTICLE BY SLUG + INCREMENT VIEWS
 router.get('/:slug', async (req, res) => {
   try {
-    const article = await Article.findOne({ slug: req.params.slug });
+    const article = await Article.findOneAndUpdate(
+      { slug: req.params.slug },
+      { $inc: { views: 1 } }, // 🔥 FIX: auto increase views
+      { new: true }
+    );
 
     if (!article) {
       return res.status(404).json({ error: "Not found" });
@@ -52,9 +56,7 @@ router.post('/', async (req, res) => {
       status
     } = req.body;
 
-    const slug = title.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') + '-' + Date.now();
+    const slug = slugify(title);
 
     const article = new Article({
       title,
@@ -68,17 +70,20 @@ router.post('/', async (req, res) => {
       tags,
       is_featured,
       is_breaking,
-      status
+      status,
+      views: 0,      // 🔥 ensure default
+      likes: 0
     });
 
     await article.save();
-
     res.json(article);
+
   } catch (err) {
-    console.error(err); // 👈 IMPORTANT
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
+
 // ✅ UPDATE ARTICLE USING SLUG
 router.put('/slug/:slug', admin, async (req, res) => {
   try {
@@ -98,11 +103,16 @@ router.put('/slug/:slug', admin, async (req, res) => {
   }
 });
 
-// ✅ DELETE ARTICLE USING SLUG
+// ✅ DELETE ARTICLE USING SLUG (FIX RESPONSE)
 router.delete('/slug/:slug', admin, async (req, res) => {
   try {
-    await Article.findOneAndDelete({ slug: req.params.slug });
-    res.json({ message: 'Deleted' });
+    const deleted = await Article.findOneAndDelete({ slug: req.params.slug });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    res.json({ message: 'Deleted successfully' }); // 🔥 FIX
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
