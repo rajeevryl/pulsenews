@@ -43,7 +43,7 @@ router.post('/', async (req, res) => {
 
     const article = new Article({
       title,
-      slug,
+      slug, // ✅ IMPORTANT
       content,
       cover_image,
       video
