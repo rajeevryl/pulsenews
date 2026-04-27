@@ -38,7 +38,19 @@ router.get('/:slug', async (req, res) => {
 // ✅ CREATE ARTICLE
 router.post('/', async (req, res) => {
   try {
-    const { title, subheading, content, cover_image, video } = req.body;
+    const {
+      title,
+      subheading,
+      content,
+      cover_image,
+      video,
+      excerpt,
+      category_id,
+      tags,
+      is_featured,
+      is_breaking,
+      status
+    } = req.body;
 
     const slug = title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -46,17 +58,24 @@ router.post('/', async (req, res) => {
 
     const article = new Article({
       title,
+      slug,
       subheading,
       content,
       cover_image,
       video,
-      slug
+      excerpt,
+      category_id,
+      tags,
+      is_featured,
+      is_breaking,
+      status
     });
 
     await article.save();
 
     res.json(article);
   } catch (err) {
+    console.error(err); // 👈 IMPORTANT
     res.status(500).json({ error: err.message });
   }
 });
