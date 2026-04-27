@@ -23,9 +23,12 @@ router.get('/', async (req, res) => {
 
     let filter = {};
 
-    // ✅ Apply category filter
+    // ✅ FORCE MATCH CATEGORY (case-insensitive)
     if (category) {
-      filter.category_id = category;
+      filter.category_id = {
+        $regex: `^${category}$`,
+        $options: 'i'
+      };
     }
 
     const articles = await Article.find(filter).sort({ createdAt: -1 });
@@ -35,8 +38,7 @@ router.get('/', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-// ✅ GET SINGLE ARTICLE
+});// ✅ GET SINGLE ARTICLE
 router.get('/:slug', async (req, res) => {
   try {
     const article = await Article.findOneAndUpdate(
