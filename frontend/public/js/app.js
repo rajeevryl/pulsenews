@@ -843,7 +843,7 @@ async function renderAdminDashboard(el) {
         <table class="data-table">
           <thead><tr><th>Title</th><th>Category</th><th>Views</th></tr></thead>
           <tbody>
-            ${(s.recentArticles || []).map(a => `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.title}</td><td>${a.category_name || '—'}</td><td>${formatNum(a.views)}</td></tr>`).join('')}
+            ${(s.recentArticles || []).map(a => `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.title}</td><td>${a.category_id || '—'}</td><td>${formatNum(a.views)}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>
