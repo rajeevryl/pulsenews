@@ -1045,45 +1045,70 @@ async function saveSettings(e) {
 
 // ── Article Modal ─────────────────────────────────────────────────────────
 function openNewArticleModal() {
+  const setVal = (id, val = '') => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+
+  const setCheck = (id, val = false) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = val;
+  };
+
   document.getElementById('articleModalTitle').textContent = 'Write New Article';
 
-  // 🔥 RESET EVERYTHING
-  document.getElementById('editArticleId').value = '';
-  document.getElementById('articleTitle').value = '';
-  document.getElementById('articleSubheading').value = '';
-  document.getElementById('articleContent').value = '';
-  document.getElementById('articleImage').value = '';
-  document.getElementById('articleVideo').value = '';
-  document.getElementById('articleExcerpt').value = '';
-  document.getElementById('articleTags').value = '';
-  document.getElementById('articleFeatured').checked = false;
-  document.getElementById('articleBreaking').checked = false;
-  document.getElementById('articleStatus').value = 'published';
+  setVal('editArticleId', '');
+  setVal('articleTitle');
+  setVal('articleSubheading');
+  setVal('articleContent');
+  setVal('articleImage');
+  setVal('articleVideo');
+  setVal('articleExcerpt');
+  setVal('articleTags');
+
+  setCheck('articleFeatured', false);
+  setCheck('articleBreaking', false);
+
+  const status = document.getElementById('articleStatus');
+  if (status) status.value = 'published';
 
   populateArticleCategorySelect();
 
   showModal('articleModal');
 }
 
+
 async function openEditArticleModal(slug) {
   try {
     const r = await apiFetch(`/news/${slug}`);
     const a = await r.json();
 
+    const setVal = (id, val = '') => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+
+    const setCheck = (id, val = false) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = val;
+    };
+
     document.getElementById('articleModalTitle').textContent = 'Edit Article';
 
-    document.getElementById('editArticleId').value = a.slug;
-    document.getElementById('articleTitle').value = a.title || '';
-    document.getElementById('articleSubheading').value = a.subheading || '';
-    document.getElementById('articleContent').value = a.content || '';
-    document.getElementById('articleImage').value = a.cover_image || '';
-    document.getElementById('articleVideo').value = a.video || '';
-    document.getElementById('articleExcerpt').value = a.excerpt || '';
-    document.getElementById('articleTags').value = (a.tags || []).join(', ');
+    setVal('editArticleId', a.slug);
+    setVal('articleTitle', a.title);
+    setVal('articleSubheading', a.subheading);
+    setVal('articleContent', a.content);
+    setVal('articleImage', a.cover_image);
+    setVal('articleVideo', a.video);
+    setVal('articleExcerpt', a.excerpt);
+    setVal('articleTags', (a.tags || []).join(', '));
 
-    document.getElementById('articleFeatured').checked = !!a.is_featured;
-    document.getElementById('articleBreaking').checked = !!a.is_breaking;
-    document.getElementById('articleStatus').value = a.status || 'published';
+    setCheck('articleFeatured', !!a.is_featured);
+    setCheck('articleBreaking', !!a.is_breaking);
+
+    const status = document.getElementById('articleStatus');
+    if (status) status.value = a.status || 'published';
 
     populateArticleCategorySelect(a.category_id);
 
@@ -1105,39 +1130,47 @@ function populateArticleCategorySelect(selectedId = '') {
 async function handleSaveArticle(e) {
   e.preventDefault();
 
-  let content = document.getElementById('articleContent').value;
+  const getVal = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+  };
+
+  const getCheck = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.checked : false;
+  };
+
+  let content = getVal('articleContent');
   content = content.replace(/<[^>]*>/g, '').trim();
 
   const body = {
-    title: document.getElementById('articleTitle').value.trim(),
-    subheading: document.getElementById('articleSubheading').value,
+    title: getVal('articleTitle').trim(),
+    subheading: getVal('articleSubheading'),
     content: content,
-    cover_image: document.getElementById('articleImage').value,
-    video: document.getElementById('articleVideo').value,
-    excerpt: document.getElementById('articleExcerpt')?.value || '',
-    category_id: document.getElementById('articleCategory')?.value || '',
-    tags: document.getElementById('articleTags')?.value
+    cover_image: getVal('articleImage'),
+    video: getVal('articleVideo'),
+    excerpt: getVal('articleExcerpt'),
+    category_id: getVal('articleCategory'),
+    tags: getVal('articleTags')
       ?.split(',')
       .map(t => t.trim())
       .filter(Boolean) || [],
-    is_featured: document.getElementById('articleFeatured')?.checked || false,
-    is_breaking: document.getElementById('articleBreaking')?.checked || false,
-    status: document.getElementById('articleStatus')?.value || 'published',
+    is_featured: getCheck('articleFeatured'),
+    is_breaking: getCheck('articleBreaking'),
+    status: getVal('articleStatus') || 'published',
   };
 
   try {
-    const slug = document.getElementById('editArticleId').value;
+    const slug = getVal('editArticleId');
 
     let r;
 
     if (slug) {
-      // UPDATE
       r = await apiFetch(`/news/slug/${slug}`, {
         method: 'PUT',
         body: JSON.stringify(body),
       });
     } else {
-      // CREATE
       r = await apiFetch('/news', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -1157,8 +1190,7 @@ async function handleSaveArticle(e) {
     console.error(err);
     showToast('Server error', 'error');
   }
-}
-// ── Auth ──────────────────────────────────────────────────────────────────
+}// ── Auth ──────────────────────────────────────────────────────────────────
 async function handleLogin(e) {
   e.preventDefault();
   const r = await fetch(`${API}/auth/login`, {
