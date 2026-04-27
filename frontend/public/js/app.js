@@ -482,17 +482,25 @@ async function renderArticlePage(slug) {
           ${a.cover_image ? `<img src="${a.cover_image}" class="article-hero-img" alt="${a.title}" onerror="this.style.display='none'">` : ''}
 
 ${a.video ? `
-  <div style="margin:20px 0">
-    <iframe 
-      width="100%" 
-      height="400" 
-      src="${getEmbedUrl(a.video)}" 
-      frameborder="0" 
-      allowfullscreen>
-    </iframe>
+  <div 
+    style="position:relative;margin:20px 0;cursor:pointer"
+    onclick="playVideo(this, '${a.video}')"
+  >
+    <img 
+      src="https://img.youtube.com/vi/${getVideoId(a.video)}/hqdefault.jpg"
+      style="width:100%;border-radius:8px"
+    >
+
+    <div style="
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      font-size:60px;
+      color:white;
+    ">▶</div>
   </div>
 ` : ''}
-
           <div class="article-body">${a.content || ''}</div>
 
           ${(a.tags || []).length ? `
@@ -1266,5 +1274,32 @@ function getEmbedUrl(url) {
 
   return url;
 }
+function getVideoId(url) {
+  if (!url) return '';
+
+  if (url.includes('watch?v=')) {
+    return url.split('watch?v=')[1].split('&')[0];
+  }
+
+  if (url.includes('youtu.be/')) {
+    return url.split('youtu.be/')[1];
+  }
+
+  return '';
+}
 // ── Start ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
+
+
+function playVideo(el, url) {
+  const embed = getEmbedUrl(url);
+
+  el.innerHTML = `
+    <iframe width="100%" height="400"
+      src="${embed}?autoplay=1"
+      frameborder="0"
+      allow="autoplay"
+      allowfullscreen>
+    </iframe>
+  `;
+}
