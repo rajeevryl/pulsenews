@@ -1,3 +1,4 @@
+const connectDB = require('./db');
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -60,7 +61,7 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
-
+connectDB();
 app.listen(PORT, () => {
   console.log(`\n🚀 PulseNews running on http://localhost:${PORT}`);
   console.log(`📰 Admin panel: http://localhost:${PORT}/admin.html`);
