@@ -41,7 +41,6 @@ router.post('/', admin, async (req, res) => {
     }
 
     const article = new Article({
-      _id: uuidv4(),
       title,
       slug: slugify(title),
       content,
