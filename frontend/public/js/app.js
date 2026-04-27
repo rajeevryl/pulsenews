@@ -1140,26 +1140,32 @@ async function handleSaveArticle(e) {
     return el ? el.checked : false;
   };
 
+  // ✅ Get category properly (IMPORTANT FIX)
+  const categorySelect = document.getElementById('articleCategory');
+  const categoryValue = categorySelect
+    ? categorySelect.options[categorySelect.selectedIndex].text.toLowerCase()
+    : '';
+
   let content = getVal('articleContent');
   content = content.replace(/<[^>]*>/g, '').trim();
 
   const body = {
     title: getVal('articleTitle').trim(),
     subheading: getVal('articleSubheading'),
-    category_id: document.getElementById('articleCategory') 
-  ? document.getElementById('articleCategory').options[
-      document.getElementById('articleCategory').selectedIndex
-    ].text.toLowerCase()
-  : '',
+
+    // ✅ FIXED CATEGORY (ONLY ONE)
+    category_id: categoryValue,
+
     content: content,
     cover_image: getVal('articleImage'),
     video: getVal('articleVideo'),
     excerpt: getVal('articleExcerpt'),
-    category_id: getVal('articleCategory'),
+
     tags: getVal('articleTags')
       ?.split(',')
       .map(t => t.trim())
       .filter(Boolean) || [],
+
     is_featured: getCheck('articleFeatured'),
     is_breaking: getCheck('articleBreaking'),
     status: getVal('articleStatus') || 'published',
@@ -1171,11 +1177,13 @@ async function handleSaveArticle(e) {
     let r;
 
     if (slug) {
+      // UPDATE
       r = await apiFetch(`/news/slug/${slug}`, {
         method: 'PUT',
         body: JSON.stringify(body),
       });
     } else {
+      // CREATE
       r = await apiFetch('/news', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -1195,7 +1203,9 @@ async function handleSaveArticle(e) {
     console.error(err);
     showToast('Server error', 'error');
   }
-}// ── Auth ──────────────────────────────────────────────────────────────────
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
 async function handleLogin(e) {
   e.preventDefault();
   const r = await fetch(`${API}/auth/login`, {
