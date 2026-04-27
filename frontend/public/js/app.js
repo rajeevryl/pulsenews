@@ -1074,35 +1074,51 @@ function populateArticleCategorySelect(selectedId = '') {
 
 async function handleSaveArticle(e) {
   e.preventDefault();
+
   const id = document.getElementById('editArticleId').value;
+
   const body = {
     title: document.getElementById('articleTitle').value,
     excerpt: document.getElementById('articleExcerpt').value,
     content: document.getElementById('articleContent').value,
     cover_image: document.getElementById('articleImage').value,
     category_id: document.getElementById('articleCategory').value || null,
-    tags: document.getElementById('articleTags').value.split(',').map(t => t.trim()).filter(Boolean),
+    tags: document.getElementById('articleTags').value
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean),
     is_featured: document.getElementById('articleFeatured').checked,
     is_breaking: document.getElementById('articleBreaking').checked,
     status: document.getElementById('articleStatus').value,
   };
-  const url = id ? `/news/${id}` : '/news';
-  const method = id ? 'PUT' : 'POST';
-  const r = await apiFetch(url, { method, body: JSON.stringify(body) });
-  if (r.ok) {
-    hideModal('articleModal');
-    showToast(id ? 'Article updated!' : 'Article published!', 'success');
-    await loadBreakingTicker();
-    renderAdminPage('articles');
-  } else {
-    const d = await r.json();
-    showToast(d.error || 'Failed to save', 'error');
-  }
-}
 
-async function deleteArticle(id) {
+  // ✅ FIX: use slug route instead of id
+  const url = id ? `/news/slug/${id}` : '/news';
+  const method = id ? 'PUT' : 'POST';
+
+  try {
+    const r = await apiFetch(url, {
+      method,
+      body: JSON.stringify(body),
+    });
+
+    const data = await r.json();
+
+    if (r.ok) {
+      hideModal('articleModal');
+      showToast(id ? 'Article updated!' : 'Article published!', 'success');
+
+      await loadBreakingTicker();
+      renderAdminPage('articles');
+    } else {
+      showToast(data.error || 'Failed to save', 'error');
+    }
+  } catch (err) {
+    showToast('Server error', 'error');
+  }
+}async function deleteArticle(id) {
   if (!confirm('Delete this article? This cannot be undone.')) return;
-  const r = await apiFetch(`/news/${id}`, { method: 'DELETE' });
+  const r = await apiFetch(`/news/slug/${id}`, { method: 'DELETE' });
   if (r.ok) { showToast('Deleted', 'success'); renderAdminPage('articles'); }
   else showToast('Delete failed', 'error');
 }
