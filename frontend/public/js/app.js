@@ -500,8 +500,7 @@ ${a.video ? `
       color:white;
     ">▶</div>
   </div>
-` : ''}
-          <div class="article-body">${a.content || ''}</div>
+` : ''}          <div class="article-body">${a.content || ''}</div>
 
           ${(a.tags || []).length ? `
             <div class="tag-cloud">
@@ -1306,13 +1305,43 @@ document.addEventListener('DOMContentLoaded', init);
 
 
 function playVideo(el, url) {
-  const embed = getEmbedUrl(url);
+  if (!url) {
+    el.innerHTML = "<p>No video found</p>";
+    return;
+  }
+
+  let videoId = '';
+
+  try {
+    const u = new URL(url);
+
+    if (u.hostname.includes('youtube.com')) {
+      videoId = u.searchParams.get('v');
+    }
+
+    if (u.hostname.includes('youtu.be')) {
+      videoId = u.pathname.slice(1);
+    }
+
+  } catch (e) {}
+
+  if (!videoId) {
+    el.innerHTML = `
+      <div style="padding:20px;text-align:center">
+        <p>⚠️ Cannot play video</p>
+        <a href="${url}" target="_blank">▶ Open in YouTube</a>
+      </div>
+    `;
+    return;
+  }
+
+  const embed = `https://www.youtube.com/embed/${videoId}`;
 
   el.innerHTML = `
     <iframe width="100%" height="400"
-     src="https://www.youtube.com/embed/${(a.video.split('v=')[1] || a.video.split('youtu.be/')[1] || '').split('&')[0]}"
+      src="${embed}?autoplay=1"
       frameborder="0"
-      allow="autoplay"
+      allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
   `;
