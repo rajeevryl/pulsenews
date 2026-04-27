@@ -441,7 +441,7 @@ async function renderArticlePage(slug) {
     const r = await apiFetch(`/news/${slug}`);
     if (!r.ok) throw new Error('Not found');
     const a = await r.json();
-    const readTime = Math.ceil((a.content?.replace(/<[^>]+>/g, '').split(' ').length || 0) / 200);
+    const readTime = Math.ceil((a.content?.split(' ').length || 0) / 200);
 
     document.title = a.title + ' — PulseNews';
 
@@ -500,7 +500,9 @@ ${a.video ? `
       color:white;
     ">▶</div>
   </div>
-` : ''}          <div class="article-body">${a.content || ''}</div>
+` : ''}        
+
+  <div class="article-body">${escapeHtml(a.content || '')}</div>
 
           ${(a.tags || []).length ? `
             <div class="tag-cloud">

@@ -10,6 +10,12 @@ function slugify(str) {
     .replace(/(^-|-$)/g, '') + '-' + Date.now();
 }
 
+// 🔹 REMOVE HTML TAGS (IMPORTANT)
+function cleanText(text) {
+  if (!text) return '';
+  return text.replace(/<[^>]*>/g, '').trim();
+}
+
 // ✅ GET ALL ARTICLES
 router.get('/', async (req, res) => {
   try {
@@ -20,12 +26,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ GET SINGLE ARTICLE BY SLUG + INCREMENT VIEWS
+// ✅ GET SINGLE ARTICLE
 router.get('/:slug', async (req, res) => {
   try {
     const article = await Article.findOneAndUpdate(
       { slug: req.params.slug },
-      { $inc: { views: 1 } }, // 🔥 FIX: auto increase views
+      { $inc: { views: 1 } },
       { new: true }
     );
 
@@ -39,10 +45,10 @@ router.get('/:slug', async (req, res) => {
   }
 });
 
-// ✅ CREATE ARTICLE
+// ✅ CREATE ARTICLE (FIXED)
 router.post('/', async (req, res) => {
   try {
-    const {
+    let {
       title,
       subheading,
       content,
@@ -56,22 +62,30 @@ router.post('/', async (req, res) => {
       status
     } = req.body;
 
+    if (!title || !content) {
+      return res.status(400).json({ error: "Title and content required" });
+    }
+
+    // 🔥 CLEAN CONTENT (NO HTML)
+    content = cleanText(content);
+    excerpt = cleanText(excerpt);
+
     const slug = slugify(title);
 
     const article = new Article({
-      title,
+      title: cleanText(title),
       slug,
-      subheading,
+      subheading: cleanText(subheading),
       content,
       cover_image,
       video,
       excerpt,
       category_id,
       tags,
-      is_featured,
-      is_breaking,
-      status,
-      views: 0,      // 🔥 ensure default
+      is_featured: !!is_featured,
+      is_breaking: !!is_breaking,
+      status: status || "published",
+      views: 0,
       likes: 0
     });
 
@@ -79,17 +93,24 @@ router.post('/', async (req, res) => {
     res.json(article);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ UPDATE ARTICLE USING SLUG
+// ✅ UPDATE ARTICLE (FIXED FOR EDIT)
 router.put('/slug/:slug', admin, async (req, res) => {
   try {
+    let updates = { ...req.body };
+
+    // 🔥 CLEAN TEXT FIELDS
+    if (updates.title) updates.title = cleanText(updates.title);
+    if (updates.subheading) updates.subheading = cleanText(updates.subheading);
+    if (updates.content) updates.content = cleanText(updates.content);
+    if (updates.excerpt) updates.excerpt = cleanText(updates.excerpt);
+
     const updated = await Article.findOneAndUpdate(
       { slug: req.params.slug },
-      req.body,
+      updates,
       { new: true }
     );
 
@@ -98,12 +119,13 @@ router.put('/slug/:slug', admin, async (req, res) => {
     }
 
     res.json(updated);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ DELETE ARTICLE USING SLUG (FIX RESPONSE)
+// ✅ DELETE ARTICLE
 router.delete('/slug/:slug', admin, async (req, res) => {
   try {
     const deleted = await Article.findOneAndDelete({ slug: req.params.slug });
@@ -112,7 +134,8 @@ router.delete('/slug/:slug', admin, async (req, res) => {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    res.json({ message: 'Deleted successfully' }); // 🔥 FIX
+    res.json({ message: 'Deleted successfully' });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

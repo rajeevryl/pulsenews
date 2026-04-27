@@ -1,23 +1,84 @@
 const mongoose = require('mongoose');
 
 const articleSchema = new mongoose.Schema({
-  title: String,
-  slug: String,
-  subheading: String,   // ✅ add this
-  content: String,
-  cover_image: String,
-  video: String,        // ✅ add this
-  excerpt: String,
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
 
-  category_id: String,
-  tags: [String],
+  slug: {
+    type: String,
+    required: true,
+    unique: true
+  },
 
-  is_featured: Boolean,
-  is_breaking: Boolean,
-  status: String,
+  subheading: {
+    type: String,
+    trim: true,
+    default: ''
+  },
 
-  views: { type: Number, default: 0 },
-  likes: { type: Number, default: 0 }
-}, { timestamps: true });
+  content: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  cover_image: {
+    type: String,
+    default: ''
+  },
+
+  video: {
+    type: String,
+    default: ''
+  },
+
+  excerpt: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+
+  category_id: {
+    type: String,
+    default: ''
+  },
+
+  tags: {
+    type: [String],
+    default: []
+  },
+
+  is_featured: {
+    type: Boolean,
+    default: false
+  },
+
+  is_breaking: {
+    type: Boolean,
+    default: false
+  },
+
+  status: {
+    type: String,
+    enum: ['draft', 'published'],
+    default: 'published'
+  },
+
+  views: {
+    type: Number,
+    default: 0
+  },
+
+  likes: {
+    type: Number,
+    default: 0
+  }
+
+}, {
+  timestamps: true
+});
 
 module.exports = mongoose.model('Article', articleSchema);
