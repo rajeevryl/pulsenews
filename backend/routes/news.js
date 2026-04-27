@@ -23,34 +23,35 @@ router.get('/:slug', async (req, res) => {
   try {
     const article = await Article.findOne({ slug: req.params.slug });
 
-    if (!article) return res.status(404).json({ error: 'Article not found' });
+    if (!article) {
+      return res.status(404).json({ error: "Not found" });
+    }
 
     res.json(article);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ✅ CREATE ARTICLE
-router.post('/', admin, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { title, content, cover_image, video } = req.body;
 
-    if (!title || !content) {
-      return res.status(400).json({ error: 'Title and content required' });
-    }
+    const slug = title.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') + '-' + Date.now();
 
     const article = new Article({
       title,
-      slug: slugify(title),
+      slug,
       content,
-      cover_image: cover_image || '',
-      video: video || ''
+      cover_image,
+      video
     });
 
     await article.save();
 
-    res.status(201).json(article);
+    res.json(article);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
