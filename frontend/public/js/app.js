@@ -1146,6 +1146,11 @@ async function handleSaveArticle(e) {
   const body = {
     title: getVal('articleTitle').trim(),
     subheading: getVal('articleSubheading'),
+    category_id: document.getElementById('articleCategory') 
+  ? document.getElementById('articleCategory').options[
+      document.getElementById('articleCategory').selectedIndex
+    ].text.toLowerCase()
+  : '',
     content: content,
     cover_image: getVal('articleImage'),
     video: getVal('articleVideo'),
