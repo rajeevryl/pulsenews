@@ -1310,7 +1310,7 @@ function playVideo(el, url) {
 
   el.innerHTML = `
     <iframe width="100%" height="400"
-      src="${embed}?autoplay=1"
+     src="https://www.youtube.com/embed/${(a.video.split('v=')[1] || a.video.split('youtu.be/')[1] || '').split('&')[0]}"
       frameborder="0"
       allow="autoplay"
       allowfullscreen>
