@@ -486,7 +486,7 @@ ${a.video ? `
     <iframe 
       width="100%" 
       height="400" 
-      src="${a.video}" 
+      src="${getEmbedUrl(a.video)}" 
       frameborder="0" 
       allowfullscreen>
     </iframe>
@@ -1077,17 +1077,22 @@ async function handleSaveArticle(e) {
 
   const body = {
     title: document.getElementById('articleTitle').value,
-    excerpt: document.getElementById('articleExcerpt').value,
+    subheading: document.getElementById('articleSubheading').value, // ✅ NEW
     content: document.getElementById('articleContent').value,
     cover_image: document.getElementById('articleImage').value,
-    category_id: document.getElementById('articleCategory').value || null,
-    tags: document.getElementById('articleTags').value
-      .split(',')
+    video: document.getElementById('articleVideo').value, // ✅ NEW
+
+    // keep old if you want
+    excerpt: document.getElementById('articleExcerpt')?.value || '',
+    category_id: document.getElementById('articleCategory')?.value || null,
+    tags: document.getElementById('articleTags')?.value
+      ?.split(',')
       .map(t => t.trim())
-      .filter(Boolean),
-    is_featured: document.getElementById('articleFeatured').checked,
-    is_breaking: document.getElementById('articleBreaking').checked,
-    status: document.getElementById('articleStatus').value,
+      .filter(Boolean) || [],
+
+    is_featured: document.getElementById('articleFeatured')?.checked || false,
+    is_breaking: document.getElementById('articleBreaking')?.checked || false,
+    status: document.getElementById('articleStatus')?.value || 'published',
   };
 
   try {
@@ -1108,7 +1113,6 @@ async function handleSaveArticle(e) {
     showToast('Server error', 'error');
   }
 }
-
 // ── Auth ──────────────────────────────────────────────────────────────────
 async function handleLogin(e) {
   e.preventDefault();
@@ -1249,5 +1253,18 @@ function renderError(msg) {
   return `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p>${msg}</p><button class="btn btn-primary" onclick="navigate('home')" style="margin-top:16px">Go Home</button></div>`;
 }
 
+function getEmbedUrl(url) {
+  if (!url) return '';
+
+  if (url.includes('watch?v=')) {
+    return url.replace('watch?v=', 'embed/');
+  }
+
+  if (url.includes('youtu.be/')) {
+    return url.replace('youtu.be/', 'youtube.com/embed/');
+  }
+
+  return url;
+}
 // ── Start ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
