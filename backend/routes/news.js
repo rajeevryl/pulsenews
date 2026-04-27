@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { auth, admin, optionalAuth } = require('../middleware/auth');
+const { admin } = require('../middleware/auth');
 const Article = require('../models/Article');
 
+// 🔹 SLUG FUNCTION
 function slugify(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now();
+  return str.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') + '-' + Date.now();
 }
 
 // ✅ GET ALL ARTICLES
@@ -18,7 +20,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ GET SINGLE ARTICLE
+// ✅ GET SINGLE ARTICLE BY SLUG
 router.get('/:slug', async (req, res) => {
   try {
     const article = await Article.findOne({ slug: req.params.slug });
@@ -32,18 +34,17 @@ router.get('/:slug', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // ✅ CREATE ARTICLE
 router.post('/', async (req, res) => {
   try {
     const { title, content, cover_image, video } = req.body;
 
-    const slug = title.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') + '-' + Date.now();
+    const slug = slugify(title);
 
     const article = new Article({
       title,
-      slug, // ✅ IMPORTANT
+      slug,
       content,
       cover_image,
       video
@@ -57,20 +58,29 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ✅ UPDATE ARTICLE
-router.put('/:id', admin, async (req, res) => {
+// ✅ UPDATE ARTICLE USING SLUG
+router.put('/slug/:slug', admin, async (req, res) => {
   try {
-    await Article.findByIdAndUpdate(req.params.id, req.body);
-    res.json({ message: 'Updated' });
+    const updated = await Article.findOneAndUpdate(
+      { slug: req.params.slug },
+      req.body,
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ DELETE ARTICLE
-router.delete('/:id', admin, async (req, res) => {
+// ✅ DELETE ARTICLE USING SLUG
+router.delete('/slug/:slug', admin, async (req, res) => {
   try {
-    await Article.findByIdAndDelete(req.params.id);
+    await Article.findOneAndDelete({ slug: req.params.slug });
     res.json({ message: 'Deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
