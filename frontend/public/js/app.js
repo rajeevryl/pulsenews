@@ -1046,32 +1046,53 @@ async function saveSettings(e) {
 // ── Article Modal ─────────────────────────────────────────────────────────
 function openNewArticleModal() {
   document.getElementById('articleModalTitle').textContent = 'Write New Article';
+
+  // 🔥 RESET EVERYTHING
   document.getElementById('editArticleId').value = '';
   document.getElementById('articleTitle').value = '';
-  document.getElementById('articleExcerpt').value = '';
+  document.getElementById('articleSubheading').value = '';
   document.getElementById('articleContent').value = '';
   document.getElementById('articleImage').value = '';
+  document.getElementById('articleVideo').value = '';
+  document.getElementById('articleExcerpt').value = '';
   document.getElementById('articleTags').value = '';
   document.getElementById('articleFeatured').checked = false;
   document.getElementById('articleBreaking').checked = false;
   document.getElementById('articleStatus').value = 'published';
+
   populateArticleCategorySelect();
+
   showModal('articleModal');
 }
 
-async function openEditArticleModal(id) {
-  const r = await apiFetch(`/admin/articles?limit=100`);
-  const data = await r.json();
-  const article = (data.articles || []).find(a => a.slug === id);
-  if (!article) return showToast('Could not load article', 'error');
-  document.getElementById('articleModalTitle').textContent = 'Edit Article';
-  document.getElementById('editArticleId').value = id;
-  document.getElementById('articleTitle').value = article.title;
-  document.getElementById('articleStatus').value = article.status;
-  document.getElementById('articleFeatured').checked = !!article.is_featured;
-  document.getElementById('articleBreaking').checked = !!article.is_breaking;
-  populateArticleCategorySelect(article.category_id);
-  showModal('articleModal');
+async function openEditArticleModal(slug) {
+  try {
+    const r = await apiFetch(`/news/${slug}`);
+    const a = await r.json();
+
+    document.getElementById('articleModalTitle').textContent = 'Edit Article';
+
+    document.getElementById('editArticleId').value = a.slug;
+    document.getElementById('articleTitle').value = a.title || '';
+    document.getElementById('articleSubheading').value = a.subheading || '';
+    document.getElementById('articleContent').value = a.content || '';
+    document.getElementById('articleImage').value = a.cover_image || '';
+    document.getElementById('articleVideo').value = a.video || '';
+    document.getElementById('articleExcerpt').value = a.excerpt || '';
+    document.getElementById('articleTags').value = (a.tags || []).join(', ');
+
+    document.getElementById('articleFeatured').checked = !!a.is_featured;
+    document.getElementById('articleBreaking').checked = !!a.is_breaking;
+    document.getElementById('articleStatus').value = a.status || 'published';
+
+    populateArticleCategorySelect(a.category_id);
+
+    showModal('articleModal');
+
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to load article', 'error');
+  }
 }
 
 function populateArticleCategorySelect(selectedId = '') {
@@ -1293,6 +1314,12 @@ async function deleteArticle(slug) {
     showToast('Server error', 'error');
   }
 }
+
+document.addEventListener('click', function (e) {
+  if (e.target && e.target.textContent.includes('Save Article')) {
+    handleSaveArticle(e);
+  }
+});
 
 async function updateArticle(slug) {
   let content = document.getElementById('articleContent').value;
