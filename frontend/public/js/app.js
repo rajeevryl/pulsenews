@@ -502,10 +502,10 @@ ${a.video ? `
 
           <div class="divider"></div>
           <div class="article-actions">
-            <button class="btn ${a.liked_by_user ? 'btn-primary' : 'btn-ghost'}" id="likeBtn" onclick="toggleLike('${a.id}')">
+            <button class="btn ${a.liked_by_user ? 'btn-primary' : 'btn-ghost'}" id="likeBtn" onclick="toggleLike('${a.slug}')">
               ❤️ ${a.liked_by_user ? 'Liked' : 'Like'} · <span id="likeCountBtn">${a.likes || 0}</span>
             </button>
-            <button class="btn ${a.saved_by_user ? 'btn-success' : 'btn-ghost'}" id="saveBtn" onclick="toggleSave('${a.id}')">
+            <button class="btn ${a.saved_by_user ? 'btn-success' : 'btn-ghost'}" id="saveBtn" onclick="toggleSave('${a.slug}')">
               ${a.saved_by_user ? '✅ Saved' : '📑 Save Article'}
             </button>
             <button class="btn btn-ghost" onclick="shareArticle('${a.title}')">
@@ -516,7 +516,7 @@ ${a.video ? `
           <div class="divider"></div>
           <div class="comments-section">
             <h2 style="font-family:var(--heading);font-size:24px;margin-bottom:20px">💬 Discussion (${(a.comments || []).length})</h2>
-            ${renderCommentForm(a.id)}
+            ${renderCommentForm(a.slug)}
             <div id="commentsList">
               ${(a.comments || []).length ? a.comments.map(c => renderComment(c)).join('') : '<p style="color:var(--ink-light);text-align:center;padding:24px">No comments yet. Be the first!</p>'}
             </div>
@@ -874,8 +874,8 @@ async function renderAdminArticles(el) {
               <td>${new Date(a.published_at).toLocaleDateString()}</td>
               <td><div class="actions">
                 <button class="btn btn-ghost btn-sm" onclick="navigate('article','${a.slug}')">👁 View</button>
-                <button class="btn btn-ghost btn-sm" onclick="openEditArticleModal('${a.id}')">✏️ Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteArticle('${a.id}')">🗑</button>
+                <button class="btn btn-ghost btn-sm" onclick="openEditArticleModal('${a.slug}')">✏️ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteArticle('${a.slug}')">🗑</button>
               </div></td>
             </tr>`).join('')}
         </tbody>
@@ -1053,7 +1053,7 @@ function openNewArticleModal() {
 async function openEditArticleModal(id) {
   const r = await apiFetch(`/admin/articles?limit=100`);
   const data = await r.json();
-  const article = (data.articles || []).find(a => a.id === id);
+  const article = (data.articles || []).find(a => a.slug === id);
   if (!article) return showToast('Could not load article', 'error');
   document.getElementById('articleModalTitle').textContent = 'Edit Article';
   document.getElementById('editArticleId').value = id;
