@@ -2,24 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { admin } = require('../middleware/auth');
 
-// ✅ IMPORT MONGODB MODELS
 const Article = require('../models/Article');
-const User = require('../models/User');
-const Comment = require('../models/Comment');
 
-// ✅ DASHBOARD STATS (MONGODB)
+// ✅ DASHBOARD STATS (ONLY ARTICLES)
 router.get('/stats', admin, async (req, res) => {
   try {
     const totalArticles = await Article.countDocuments();
-    const publishedArticles = await Article.countDocuments();
+    const publishedArticles = totalArticles;
 
-    const totalUsers = await User.countDocuments();
-    const totalComments = await Comment.countDocuments();
+    const articles = await Article.find();
 
-    const allArticles = await Article.find();
-
-    const totalViews = allArticles.reduce((sum, a) => sum + (a.views || 0), 0);
-    const totalLikes = allArticles.reduce((sum, a) => sum + (a.likes || 0), 0);
+    const totalViews = articles.reduce((sum, a) => sum + (a.views || 0), 0);
+    const totalLikes = articles.reduce((sum, a) => sum + (a.likes || 0), 0);
 
     const recentArticles = await Article.find()
       .sort({ createdAt: -1 })
@@ -32,8 +26,8 @@ router.get('/stats', admin, async (req, res) => {
     res.json({
       totalArticles,
       publishedArticles,
-      totalUsers,
-      totalComments,
+      totalUsers: 1,
+      totalComments: 0,
       totalViews,
       totalLikes,
       recentArticles,
@@ -46,12 +40,11 @@ router.get('/stats', admin, async (req, res) => {
   }
 });
 
-// ✅ ADMIN ARTICLES (MONGODB)
+// ✅ ADMIN ARTICLES
 router.get('/articles', admin, async (req, res) => {
   try {
     const articles = await Article.find()
-      .sort({ createdAt: -1 })
-      .limit(30);
+      .sort({ createdAt: -1 });
 
     res.json({
       articles,
@@ -63,19 +56,7 @@ router.get('/articles', admin, async (req, res) => {
   }
 });
 
-// ✅ USERS
-router.get('/users', admin, async (req, res) => {
-  const users = await User.find().sort({ createdAt: -1 });
-  res.json(users);
-});
-
-// ✅ COMMENTS
-router.get('/comments', admin, async (req, res) => {
-  const comments = await Comment.find().sort({ createdAt: -1 });
-  res.json(comments);
-});
-
-// ✅ SETTINGS (keep simple)
+// KEEP SETTINGS SIMPLE
 router.get('/settings', (req, res) => {
   res.json({});
 });
