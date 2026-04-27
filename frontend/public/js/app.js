@@ -1264,26 +1264,40 @@ function renderError(msg) {
 function getEmbedUrl(url) {
   if (!url) return '';
 
-  if (url.includes('watch?v=')) {
-    return url.replace('watch?v=', 'embed/');
+  try {
+    const u = new URL(url);
+
+    // ✅ youtube.com/watch?v=...
+    if (u.hostname.includes('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) return `https://www.youtube.com/embed/${v}`;
+    }
+
+    // ✅ youtu.be/...
+    if (u.hostname.includes('youtu.be')) {
+      const id = u.pathname.slice(1);
+      return `https://www.youtube.com/embed/${id}`;
+    }
+
+  } catch (e) {
+    console.log("Invalid URL");
   }
 
-  if (url.includes('youtu.be/')) {
-    return url.replace('youtu.be/', 'youtube.com/embed/');
-  }
-
-  return url;
+  return '';
 }
 function getVideoId(url) {
-  if (!url) return '';
+  try {
+    const u = new URL(url);
 
-  if (url.includes('watch?v=')) {
-    return url.split('watch?v=')[1].split('&')[0];
-  }
+    if (u.hostname.includes('youtube.com')) {
+      return u.searchParams.get('v');
+    }
 
-  if (url.includes('youtu.be/')) {
-    return url.split('youtu.be/')[1];
-  }
+    if (u.hostname.includes('youtu.be')) {
+      return u.pathname.slice(1);
+    }
+
+  } catch (e) {}
 
   return '';
 }
