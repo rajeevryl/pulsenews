@@ -1075,8 +1075,6 @@ function populateArticleCategorySelect(selectedId = '') {
 async function handleSaveArticle(e) {
   e.preventDefault();
 
-  const id = document.getElementById('editArticleId').value;
-
   const body = {
     title: document.getElementById('articleTitle').value,
     excerpt: document.getElementById('articleExcerpt').value,
@@ -1092,35 +1090,23 @@ async function handleSaveArticle(e) {
     status: document.getElementById('articleStatus').value,
   };
 
-  // ✅ FIX: use slug route instead of id
-  const url = id ? `/news/slug/${id}` : '/news';
-  const method = id ? 'PUT' : 'POST';
-
   try {
-    const r = await apiFetch(url, {
-      method,
+    const r = await apiFetch('/news', {
+      method: 'POST',
       body: JSON.stringify(body),
     });
 
     const data = await r.json();
 
     if (r.ok) {
-      hideModal('articleModal');
-      showToast(id ? 'Article updated!' : 'Article published!', 'success');
-
-      await loadBreakingTicker();
+      showToast('Article published!', 'success');
       renderAdminPage('articles');
     } else {
-      showToast(data.error || 'Failed to save', 'error');
+      showToast(data.error || 'Failed', 'error');
     }
   } catch (err) {
     showToast('Server error', 'error');
   }
-}async function deleteArticle(id) {
-  if (!confirm('Delete this article? This cannot be undone.')) return;
-  const r = await apiFetch(`/news/slug/${id}`, { method: 'DELETE' });
-  if (r.ok) { showToast('Deleted', 'success'); renderAdminPage('articles'); }
-  else showToast('Delete failed', 'error');
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────
