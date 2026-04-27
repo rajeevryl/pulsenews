@@ -19,13 +19,23 @@ function cleanText(text) {
 // ✅ GET ALL ARTICLES
 router.get('/', async (req, res) => {
   try {
-    const articles = await Article.find().sort({ createdAt: -1 });
+    const { category } = req.query;
+
+    let filter = {};
+
+    // ✅ Apply category filter
+    if (category) {
+      filter.category_id = category;
+    }
+
+    const articles = await Article.find(filter).sort({ createdAt: -1 });
+
     res.json({ articles });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 // ✅ GET SINGLE ARTICLE
 router.get('/:slug', async (req, res) => {
   try {
