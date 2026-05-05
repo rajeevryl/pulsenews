@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { admin } = require('../middleware/auth');
+const { admin, auth } = require('../middleware/auth');
 const Article = require('../models/Article');
+const User = require('../models/User');
 
 // 🔹 SLUG FUNCTION
 function slugify(str) {
@@ -148,6 +149,52 @@ router.delete('/slug/:slug', admin, async (req, res) => {
 
     res.json({ message: 'Deleted successfully' });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ LIKE ARTICLE
+router.post('/:slug/like', auth, async (req, res) => {
+  try {
+    const article = await Article.findOneAndUpdate(
+      { slug: req.params.slug },
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    if (!article) return res.status(404).json({ error: 'Not found' });
+    res.json({ liked: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ SAVE ARTICLE
+router.post('/:slug/save', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const slug = req.params.slug;
+    const index = user.saved_articles.indexOf(slug);
+    let saved = false;
+    if (index > -1) {
+      user.saved_articles.splice(index, 1);
+    } else {
+      user.saved_articles.push(slug);
+      saved = true;
+    }
+    await user.save();
+    res.json({ saved });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ GET SAVED ARTICLES
+router.get('/user/saved', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const articles = await Article.find({ slug: { $in: user.saved_articles } });
+    res.json(articles);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

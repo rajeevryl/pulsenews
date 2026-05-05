@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { admin } = require('../middleware/auth');
+const User = require('../models/User');
+const Comment = require('../models/Comment');
 
 const Article = require('../models/Article');
 
-// ✅ DASHBOARD STATS (ONLY ARTICLES)
+// ✅ DASHBOARD STATS
 router.get('/stats', admin, async (req, res) => {
   try {
     const totalArticles = await Article.countDocuments();
@@ -23,16 +25,20 @@ router.get('/stats', admin, async (req, res) => {
       .sort({ views: -1 })
       .limit(5);
 
+    const totalUsers = await User.countDocuments({ is_active: true });
+    const totalComments = await Comment.countDocuments();
+    const pendingComments = await Comment.countDocuments({ is_approved: false });
+
     res.json({
       totalArticles,
       publishedArticles,
-      totalUsers: 1,
-      totalComments: 0,
+      totalUsers,
+      totalComments,
       totalViews,
       totalLikes,
       recentArticles,
       topArticles,
-      pendingComments: 0
+      pendingComments
     });
 
   } catch (err) {
@@ -51,6 +57,38 @@ router.get('/articles', admin, async (req, res) => {
       total: articles.length
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ ADMIN USERS
+router.get('/users', admin, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/users/:id/toggle', admin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Not found' });
+    user.is_active = !user.is_active;
+    await user.save();
+    res.json({ message: 'Updated' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ ADMIN COMMENTS
+router.get('/comments', admin, async (req, res) => {
+  try {
+    const comments = await Comment.find().populate('user_id', 'name').sort({ createdAt: -1 });
+    res.json(comments);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

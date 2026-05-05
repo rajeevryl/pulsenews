@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken');
-const db = require('../database');
+const User = require('../models/User');
 
-exports.auth = (req, res, next) => {
+exports.auth = async (req, res, next) => {
   const header = req.headers['authorization'];
   const token = header && header.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token provided' });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
-    const user = db.prepare('SELECT id, name, email, role, avatar FROM users WHERE id = ? AND is_active = 1').get(decoded.id);
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user || !user.is_active) return res.status(401).json({ error: 'User not found' });
     req.user = user;
     next();
   } catch {
@@ -23,13 +23,13 @@ exports.admin = (req, res, next) => {
   });
 };
 
-exports.optionalAuth = (req, res, next) => {
+exports.optionalAuth = async (req, res, next) => {
   const header = req.headers['authorization'];
   const token = header && header.split(' ')[1];
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key');
-      req.user = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(decoded.id);
+      req.user = await User.findById(decoded.id).select('-password');
     } catch {}
   }
   next();
