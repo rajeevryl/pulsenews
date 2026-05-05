@@ -11,6 +11,11 @@ pulsenews/
 ├── backend/
 │   ├── middleware/
 │   │   └── auth.js           ← JWT auth middleware
+│   ├── models/
+│   │   ├── Article.js        ← Article MongoDB schema
+│   │   ├── Category.js       ← Category MongoDB schema
+│   │   ├── Comment.js        ← Comment MongoDB schema
+│   │   └── User.js           ← User MongoDB schema
 │   ├── routes/
 │   │   ├── admin.js          ← Admin dashboard API
 │   │   ├── auth.js           ← Login / Register API
@@ -18,7 +23,7 @@ pulsenews/
 │   │   ├── comments.js       ← Comments API
 │   │   └── news.js           ← Articles API
 │   ├── .env.example          ← Copy this to .env
-│   ├── database.js           ← SQLite setup + seed data
+│   ├── db.js                 ← MongoDB connection
 │   ├── package.json
 │   └── server.js             ← Main Express server
 ├── frontend/
@@ -39,14 +44,14 @@ pulsenews/
 - 🔴 Breaking news ticker
 - 📰 Article listing with categories, search, pagination
 - 🔥 Trending page (most viewed)
-- 📖 Full article page with rich content
+- 📖 Full article page with rich content & video support
 - ❤️ Like & 📑 Save articles
 - 💬 Comments (guest + registered)
 - 🌙 Dark mode toggle
 - 🔐 User registration & login (JWT)
 - 🛡️ Admin panel (articles, categories, users, comments, settings)
 - 📱 Fully mobile responsive
-- ⚡ Fast (SQLite, compression, caching)
+- ⚡ Fast (MongoDB, compression, caching)
 
 ---
 
@@ -75,7 +80,10 @@ npm install
 # In the backend folder, copy .env.example to .env
 cp .env.example .env
 
-# Open .env and set your values (optional, defaults work fine)
+# Open .env and set your values:
+# - MONGO_URL: Your MongoDB connection string (required)
+# - JWT_SECRET: Change for security (optional, defaults work)
+# - ADMIN_EMAIL/ADMIN_PASSWORD: Your admin credentials (optional)
 ```
 
 ### Step 4 — Start the Server
@@ -94,6 +102,28 @@ Visit: http://localhost:3000
 **Admin Login:**
 - Email: `admin@pulsenews.com`
 - Password: `Admin@123456`
+
+---
+
+## 🗄️ DATABASE SETUP (MongoDB)
+
+This app uses **MongoDB** for data storage. You have two options:
+
+### Option 1 — MongoDB Atlas (Cloud, Free)
+1. Go to https://mongodb.com/atlas → Sign up
+2. Create a **FREE** cluster (M0 Sandbox)
+3. Create database user & get connection string
+4. **Whitelist your IP** (or 0.0.0.0/0 for all)
+5. Copy the connection string, it looks like:
+   ```
+   mongodb+srv://username:password@cluster.mongodb.net/pulsenews
+   ```
+6. Add this to your `.env` file as `MONGO_URL`
+
+### Option 2 — Local MongoDB
+1. Install MongoDB locally
+2. Start MongoDB service
+3. Use connection string: `mongodb://localhost:27017/pulsenews`
 
 ---
 
@@ -121,6 +151,7 @@ Visit: http://localhost:3000
    NODE_ENV=production
    ADMIN_EMAIL=your@email.com
    ADMIN_PASSWORD=YourSecurePassword123
+   MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/pulsenews
    ```
 7. Set **Root Directory** to `backend` in Railway settings
 8. Set **Start Command**: `node server.js`
