@@ -401,20 +401,16 @@ function renderCategoryWidget() {
 // ── CATEGORY PAGE ─────────────────────────────────────────────────────────
 async function renderCategoryPage(slug) {
   try {
-    const r = await apiFetch('/news');
+    const r = await apiFetch(`/news?category=${encodeURIComponent(slug)}&limit=20`);
     const data = await r.json();
 
     const articles = data.articles || [];
 
-    const filtered = articles.filter(a =>
-      (a.category_id || '').toLowerCase().trim() === slug.toLowerCase().trim()
-    );
-
     document.getElementById('mainContent').innerHTML = `
       <h2>${slug.toUpperCase()} NEWS</h2>
 
-      ${filtered.length
-        ? filtered.map(a => `
+      ${articles.length
+        ? articles.map(a => `
           <div style="margin:15px 0;cursor:pointer"
             onclick="navigate('article','${a.slug}')">
             <h3>${a.title}</h3>
@@ -423,6 +419,7 @@ async function renderCategoryPage(slug) {
         `).join('')
         : '<p>No articles found</p>'
       }
+      ${renderPagination(data.pagination, 'category', slug)}
     `;
 
   } catch (err) {
@@ -442,6 +439,16 @@ async function renderArticlePage(slug) {
     const a = await r.json();
 
     document.title = a.title + ' — PulseNews';
+
+    // Load comments
+    let commentsHtml = '';
+    try {
+      const commentsRes = await apiFetch(`/comments?article_slug=${slug}`);
+      if (commentsRes.ok) {
+        const comments = await commentsRes.json();
+        commentsHtml = comments.length ? comments.map(c => renderComment(c)).join('') : '<p>No comments yet.</p>';
+      }
+    } catch {}
 
     document.getElementById('mainContent').innerHTML = `
       <div class="two-col">
@@ -478,7 +485,29 @@ async function renderArticlePage(slug) {
             </span>
           </div>
 
+          <!-- Like and Save buttons -->
+          <div style="margin:20px 0;display:flex;gap:12px">
+            <button id="likeBtn" class="btn btn-ghost" onclick="toggleLike('${a.slug}')">
+              ❤️ Like · <span id="likeCountBtn">${a.likes || 0}</span>
+            </button>
+            <button id="saveBtn" class="btn btn-ghost" onclick="toggleSave('${a.slug}')">
+              📑 Save Article
+            </button>
+            <button class="btn btn-ghost" onclick="shareArticle('${a.title}')">
+              📤 Share
+            </button>
+          </div>
+
         </article>
+      </div>
+
+      <!-- Comments Section -->
+      <div style="margin-top:40px">
+        <h3 style="font-family:var(--heading);font-size:24px;margin-bottom:20px">Comments</h3>
+        ${renderCommentForm(a.slug)}
+        <div style="margin-top:20px">
+          ${commentsHtml}
+        </div>
       </div>
     `;
 
@@ -1073,7 +1102,7 @@ async function handleSaveArticle(e) {
   const getCheck = (id) => document.getElementById(id)?.checked || false;
 
   const categorySelect = document.getElementById('articleCategory');
-  const categoryValue = categorySelect ? categorySelect.value : '';
+  const categoryValue = categorySelect.value;
 
   let content = getVal('articleContent');
   content = content.replace(/<[^>]*>/g, '').trim();
@@ -1110,10 +1139,12 @@ async function handleSaveArticle(e) {
     }
 
     if (r.ok) {
-      alert('Saved successfully');
+      showToast('Article saved!', 'success');
+      hideModal('articleModal');
       renderAdminPage('articles');
     } else {
-      alert('Error saving');
+      const data = await r.json();
+      showToast(data.error || 'Save failed', 'error');
     }
 
   } catch (err) {
