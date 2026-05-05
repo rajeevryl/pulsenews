@@ -459,21 +459,10 @@ async function renderArticlePage(slug) {
 
           ${a.cover_image ? `<img src="${a.cover_image}" style="width:100%;margin:20px 0;">` : ''}
 
-          <!-- ✅ VIDEO FIX (DIRECT EMBED) -->
-          ${a.video ? `
-            <div style="margin:20px 0;">
-              <iframe 
-                width="100%" 
-                height="400"
-                src="${getEmbedUrl(a.video)}"
-                frameborder="0"
-                allowfullscreen>
-              </iframe>
-            </div>
-          ` : ''}
+          ${a.video ? renderVideoEmbed(a.video) : ''}
 
           <div style="line-height:1.8;font-size:16px">
-            ${a.content || ''}
+            ${formatContent(a.content)}
           </div>
 
           <!-- ✅ CATEGORY FIX -->
@@ -559,7 +548,7 @@ function renderCommentForm(articleId) {
 }
 
 function renderComment(c) {
-  const name = c.user_name || c.guest_name || 'Anonymous';
+  const name = c.user_id?.name || c.user_name || c.guest_name || 'Anonymous';
   const initial = name[0].toUpperCase();
   return `
     <div class="comment">
@@ -1282,6 +1271,54 @@ function formatNum(n) {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
   if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
   return n.toString();
+}
+
+function formatContent(text) {
+  if (!text) return '';
+  const escaped = escapeHtml(text);
+  return escaped
+    .split(/\n\s*\n/)
+    .map(paragraph => `<p>${paragraph.trim().replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+function renderVideoEmbed(url) {
+  if (!url) return '';
+
+  const embedUrl = getEmbedUrl(url);
+  if (embedUrl) {
+    return `
+      <div style="margin:20px 0;">
+        <iframe 
+          width="100%" 
+          height="400"
+          src="${embedUrl}"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+  }
+
+  const extMatch = url.match(/\.(mp4|webm|ogg)(\?.*)?$/i);
+  if (extMatch) {
+    const type = extMatch[1] === 'mp4' ? 'video/mp4' : extMatch[1] === 'webm' ? 'video/webm' : 'video/ogg';
+    return `
+      <div style="margin:20px 0;">
+        <video controls style="width:100%;max-height:520px;background:#000;border-radius:var(--radius)">
+          <source src="${url}" type="${type}">
+          Your browser does not support this video.
+        </video>
+      </div>
+    `;
+  }
+
+  return `
+    <div style="margin:20px 0;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--paper-dark)">
+      <p style="margin:0 0 12px 0;font-weight:600">Video link</p>
+      <a href="${url}" target="_blank" class="btn btn-ghost">▶ Open video</a>
+    </div>
+  `;
 }
 
 function escapeHtml(text) {

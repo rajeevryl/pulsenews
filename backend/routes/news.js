@@ -20,21 +20,51 @@ function cleanText(text) {
 // ✅ GET ALL ARTICLES
 router.get('/', async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, search, featured, breaking, sort, limit = 12, page = 1 } = req.query;
+    const filter = { status: 'published' };
 
-    let filter = {};
-
-    // ✅ FORCE MATCH CATEGORY (case-insensitive)
     if (category) {
-      filter.category_id = {
-        $regex: `^${category}$`,
-        $options: 'i'
-      };
+      filter.category_id = { $regex: `^${category}$`, $options: 'i' };
     }
 
-    const articles = await Article.find(filter).sort({ createdAt: -1 });
+    if (search) {
+      const query = search.trim();
+      filter.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { excerpt: { $regex: query, $options: 'i' } },
+        { content: { $regex: query, $options: 'i' } }
+      ];
+    }
 
-    res.json({ articles });
+    if (featured === 'true' || featured === true) {
+      filter.is_featured = true;
+    }
+
+    if (breaking === 'true' || breaking === true) {
+      filter.is_breaking = true;
+    }
+
+    let sortOptions = { published_at: -1 };
+    if (sort === 'popular') sortOptions = { views: -1 };
+
+    const perPage = Math.max(1, Math.min(50, parseInt(limit, 10) || 12));
+    const currentPage = Math.max(1, parseInt(page, 10) || 1);
+
+    const total = await Article.countDocuments(filter);
+    const articles = await Article.find(filter)
+      .sort(sortOptions)
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage);
+
+    res.json({
+      articles,
+      pagination: {
+        total,
+        page: currentPage,
+        limit: perPage,
+        pages: Math.ceil(total / perPage)
+      }
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

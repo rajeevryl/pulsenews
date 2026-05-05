@@ -73,22 +73,29 @@ const seedData = async () => {
         title: 'Global Leaders Convene for Emergency Climate Summit in Geneva',
         slug: 'global-leaders-climate-summit-geneva-123456789',
         subheading: '',
-        content: `<p>World leaders from more than 50 nations gathered in Geneva on Monday for an emergency climate summit, amid growing concern about accelerating global temperature rises and extreme weather events that have devastated communities across the globe.</p>
-<p>The summit, convened by the United Nations Secretary-General, aims to produce binding commitments on carbon emissions reductions, with particular pressure on the world's largest economies to accelerate their transition timelines.</p>
-<h2>Key Agenda Points</h2>
-<p>Negotiators are working around the clock on three major pillars: emissions reduction targets, climate finance for developing nations, and a new framework for measuring and reporting carbon output.</p>
-<p>"The science is unequivocal. We have a narrow window to avoid the worst impacts of climate change, and that window is closing rapidly," said the UN Secretary-General in his opening address.</p>
-<p>Developing nations are pushing for wealthy countries to commit to a $500 billion annual climate fund, nearly double the previous target, to help them transition to renewable energy and adapt to climate impacts already being felt.</p>
-<h2>Industry Response</h2>
-<p>Business leaders accompanying their national delegations have signaled cautious support for stronger targets, provided the transition timelines are realistic and technology transfer agreements are included in the final text.</p>
-<p>The summit is expected to run for three days, with a final declaration planned for Wednesday evening.</p>`,
+        content: `World leaders from more than 50 nations gathered in Geneva on Monday for an emergency climate summit, amid growing concern about accelerating global temperature rises and extreme weather events that have devastated communities across the globe.
+
+The summit, convened by the United Nations Secretary-General, aims to produce binding commitments on carbon emissions reductions, with particular pressure on the world's largest economies to accelerate their transition timelines.
+
+Key Agenda Points
+Negotiators are working around the clock on three major pillars: emissions reduction targets, climate finance for developing nations, and a new framework for measuring and reporting carbon output.
+
+"The science is unequivocal. We have a narrow window to avoid the worst impacts of climate change, and that window is closing rapidly," said the UN Secretary-General in his opening address.
+
+Developing nations are pushing for wealthy countries to commit to a $500 billion annual climate fund, nearly double the previous target, to help them transition to renewable energy and adapt to climate impacts already being felt.
+
+Industry Response
+Business leaders accompanying their national delegations have signaled cautious support for stronger targets, provided the transition timelines are realistic and technology transfer agreements are included in the final text.
+
+The summit is expected to run for three days, with a final declaration planned for Wednesday evening.`,
         category_id: 'breaking-news',
         is_featured: true,
         is_breaking: true,
         cover_image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=800&q=80',
         tags: ['climate', 'summit', 'UN', 'environment'],
         views: 15420,
-        likes: 0
+        likes: 0,
+        published_at: new Date()
       },
       // Add more articles as needed
     ];

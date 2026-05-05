@@ -46,6 +46,11 @@ const articleSchema = new mongoose.Schema({
     default: ''
   },
 
+  published_at: {
+    type: Date,
+    default: Date.now
+  },
+
   tags: {
     type: [String],
     default: []
