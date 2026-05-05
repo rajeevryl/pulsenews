@@ -437,6 +437,9 @@ async function renderArticlePage(slug) {
     if (!r.ok) throw new Error('Not found');
 
     const a = await r.json();
+    const category = state.categories.find(c => c.slug === a.category_id);
+    const categoryLabel = category ? `${category.icon || ''} ${category.name}`.trim() : 'Uncategorized';
+    const categorySlug = category ? category.slug : '';
 
     document.title = a.title + ' — PulseNews';
 
@@ -457,7 +460,7 @@ async function renderArticlePage(slug) {
           <h1>${a.title}</h1>
           <p style="color:#666">${a.subheading || ''}</p>
 
-          ${a.cover_image ? `<img src="${a.cover_image}" style="width:100%;margin:20px 0;">` : ''}
+          ${a.cover_image ? `<img src="${a.cover_image}" style="width:100%;margin:20px 0;" onerror="this.style.display='none'">` : ''}
 
           ${a.video ? renderVideoEmbed(a.video) : ''}
 
@@ -468,9 +471,8 @@ async function renderArticlePage(slug) {
           <!-- ✅ CATEGORY FIX -->
           <div style="margin-top:20px;">
             <b>Category:</b> 
-            <span style="cursor:pointer;color:blue"
-              onclick="navigate('category','${a.category_id}')">
-              ${a.category_id}
+            <span style="cursor:pointer;color:blue" ${categorySlug ? `onclick="navigate('category','${categorySlug}')"` : ''}>
+              ${categoryLabel}
             </span>
           </div>
 
@@ -1394,9 +1396,16 @@ function getEmbedUrl(url) {
     const u = new URL(url);
 
     // ✅ youtube.com/watch?v=...
-    if (u.hostname.includes('youtube.com')) {
+    if (u.hostname.includes('youtube.com') || u.hostname.includes('youtube-nocookie.com')) {
       const v = u.searchParams.get('v');
       if (v) return `https://www.youtube.com/embed/${v}`;
+      if (u.pathname.startsWith('/shorts/')) {
+        const id = u.pathname.split('/shorts/')[1];
+        return `https://www.youtube.com/embed/${id}`;
+      }
+      if (u.pathname.includes('/embed/')) {
+        return url;
+      }
     }
 
     // ✅ youtu.be/...
@@ -1405,8 +1414,14 @@ function getEmbedUrl(url) {
       return `https://www.youtube.com/embed/${id}`;
     }
 
+    // ✅ vimeo.com/...
+    if (u.hostname.includes('vimeo.com')) {
+      const id = u.pathname.split('/').filter(Boolean).pop();
+      if (id) return `https://player.vimeo.com/video/${id}`;
+    }
+
   } catch (e) {
-    console.log("Invalid URL");
+    console.log('Invalid URL', e);
   }
 
   return '';
