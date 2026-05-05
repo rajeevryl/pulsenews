@@ -399,38 +399,36 @@ function renderCategoryWidget() {
 }
 
 // ── CATEGORY PAGE ─────────────────────────────────────────────────────────
-async function renderCategoryPage(slug, page = 1) {
-  const cat = state.categories.find(c => c.slug === slug);
+async function renderCategoryPage(slug) {
   try {
-    const r = await fetch(`${API}/news?category=${slug}&limit=12&page=${page}`);
+    const r = await apiFetch('/news');
     const data = await r.json();
+
     const articles = data.articles || [];
+
+    const filtered = articles.filter(a =>
+      (a.category_id || '').toLowerCase().trim() === slug.toLowerCase().trim()
+    );
+
     document.getElementById('mainContent').innerHTML = `
-      <div style="background:${cat?.color || '#D92B2B'}18;border:1px solid ${cat?.color || '#D92B2B'}33;border-radius:var(--radius-lg);padding:28px;margin-bottom:32px;display:flex;align-items:center;gap:16px">
-        <div style="font-size:48px">${cat?.icon || '📰'}</div>
-        <div>
-          <h1 style="font-family:var(--heading);font-size:32px;font-weight:900">${cat?.name || slug}</h1>
-          <p style="color:var(--ink-light)">${data.pagination?.total || 0} articles · All stories from this section</p>
-        </div>
-      </div>
-      <div class="section-header">
-        <div class="section-title">Latest in ${cat?.name || slug}</div>
-        <div style="display:flex;gap:8px">
-          <select onchange="sortCategoryPage('${slug}',this.value)" class="btn btn-ghost btn-sm" style="padding:6px 10px">
-            <option value="newest">Newest</option>
-            <option value="popular">Most Read</option>
-            <option value="oldest">Oldest</option>
-          </select>
-        </div>
-      </div>
-      ${articles.length ? `<div class="card-grid">${articles.map(a => renderCard(a)).join('')}</div>` : `<div class="empty-state"><div class="empty-icon">📰</div><h3>No articles yet</h3><p>Check back soon for stories in this category.</p></div>`}
-      ${renderPagination(data.pagination, 'category', slug)}
+      <h2>${slug.toUpperCase()} NEWS</h2>
+
+      ${filtered.length
+        ? filtered.map(a => `
+          <div style="margin:15px 0;cursor:pointer"
+            onclick="navigate('article','${a.slug}')">
+            <h3>${a.title}</h3>
+            <p>${a.excerpt || ''}</p>
+          </div>
+        `).join('')
+        : '<p>No articles found</p>'
+      }
     `;
-  } catch {
-    document.getElementById('mainContent').innerHTML = renderError('Could not load category.');
+
+  } catch (err) {
+    document.getElementById('mainContent').innerHTML = 'Error loading category';
   }
 }
-
 function sortCategoryPage(slug, sort) {
   navigate('category', slug);
 }
@@ -440,113 +438,54 @@ async function renderArticlePage(slug) {
   try {
     const r = await apiFetch(`/news/${slug}`);
     if (!r.ok) throw new Error('Not found');
+
     const a = await r.json();
-    const readTime = Math.ceil((a.content?.split(' ').length || 0) / 200);
 
     document.title = a.title + ' — PulseNews';
 
     document.getElementById('mainContent').innerHTML = `
       <div class="two-col">
         <article>
-          <div class="breadcrumb">
-            <span onclick="navigate('home')">Home</span>
-            <span class="breadcrumb-sep">›</span>
-            <span onclick="navigate('category','${a.category_slug}')">${a.category_icon || ''} ${a.category_name || 'News'}</span>
-            <span class="breadcrumb-sep">›</span>
-            <span style="color:var(--ink-light);cursor:default">${a.title.substring(0, 40)}...</span>
-          </div>
-          <div class="article-header">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-              ${a.is_breaking ? '<span class="badge badge-breaking">🔴 Breaking News</span>' : ''}
-              <span class="badge badge-cat" style="background:${a.category_color || '#D92B2B'}">${a.category_icon || ''} ${a.category_name || 'News'}</span>
-              <span class="badge badge-ghost">📖 ${readTime} min read</span>
+
+          <h1>${a.title}</h1>
+          <p style="color:#666">${a.subheading || ''}</p>
+
+          ${a.cover_image ? `<img src="${a.cover_image}" style="width:100%;margin:20px 0;">` : ''}
+
+          <!-- ✅ VIDEO FIX (DIRECT EMBED) -->
+          ${a.video ? `
+            <div style="margin:20px 0;">
+              <iframe 
+                width="100%" 
+                height="400"
+                src="${getEmbedUrl(a.video)}"
+                frameborder="0"
+                allowfullscreen>
+              </iframe>
             </div>
-            <h1 class="article-title">${a.title}</h1>
-            ${a.excerpt ? `<p style="font-size:19px;color:var(--ink-light);margin-top:12px;font-style:italic">${a.excerpt}</p>` : ''}
-            <div class="article-meta-bar">
-              <div class="article-author">
-                <div class="author-avatar">${(a.author_name || 'E')[0].toUpperCase()}</div>
-                <div>
-                  <div class="author-name">By ${a.author_name || 'Editorial Team'}</div>
-                  <div class="author-date">${formatDate(a.published_at)}</div>
-                </div>
-              </div>
-              <div class="card-stats" style="margin-left:auto">
-                <span class="stat-item">👁 ${formatNum(a.views)}</span>
-                <span class="stat-item">❤️ <span id="likeCount">${a.likes || 0}</span></span>
-                <span class="stat-item">💬 ${(a.comments || []).length}</span>
-              </div>
-            </div>
+          ` : ''}
+
+          <div style="line-height:1.8;font-size:16px">
+            ${a.content || ''}
           </div>
 
-          ${a.cover_image ? `<img src="${a.cover_image}" class="article-hero-img" alt="${a.title}" onerror="this.style.display='none'">` : ''}
-
-${a.video ? `
-  <div 
-    style="position:relative;margin:20px 0;cursor:pointer"
-    onclick="playVideo(this, '${a.video}')"
-  >
-    <img 
-      src="https://img.youtube.com/vi/${getVideoId(a.video)}/hqdefault.jpg"
-      style="width:100%;border-radius:8px"
-    >
-
-    <div style="
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      font-size:60px;
-      color:white;
-    ">▶</div>
-  </div>
-` : ''}        
-
-  <div class="article-body">${escapeHtml(a.content || '')}</div>
-
-          ${(a.tags || []).length ? `
-            <div class="tag-cloud">
-              ${(a.tags).map(t => `<span class="tag" onclick="navigate('search','${t}')">#${t}</span>`).join('')}
-            </div>` : ''}
-
-          <div class="divider"></div>
-          <div class="article-actions">
-            <button class="btn ${a.liked_by_user ? 'btn-primary' : 'btn-ghost'}" id="likeBtn" onclick="toggleLike('${a.slug}')">
-              ❤️ ${a.liked_by_user ? 'Liked' : 'Like'} · <span id="likeCountBtn">${a.likes || 0}</span>
-            </button>
-            <button class="btn ${a.saved_by_user ? 'btn-success' : 'btn-ghost'}" id="saveBtn" onclick="toggleSave('${a.slug}')">
-              ${a.saved_by_user ? '✅ Saved' : '📑 Save Article'}
-            </button>
-            <button class="btn btn-ghost" onclick="shareArticle('${a.title}')">
-              📤 Share
-            </button>
+          <!-- ✅ CATEGORY FIX -->
+          <div style="margin-top:20px;">
+            <b>Category:</b> 
+            <span style="cursor:pointer;color:blue"
+              onclick="navigate('category','${a.category_id}')">
+              ${a.category_id}
+            </span>
           </div>
 
-          <div class="divider"></div>
-          <div class="comments-section">
-            <h2 style="font-family:var(--heading);font-size:24px;margin-bottom:20px">💬 Discussion (${(a.comments || []).length})</h2>
-            ${renderCommentForm(a.slug)}
-            <div id="commentsList">
-              ${(a.comments || []).length ? a.comments.map(c => renderComment(c)).join('') : '<p style="color:var(--ink-light);text-align:center;padding:24px">No comments yet. Be the first!</p>'}
-            </div>
-          </div>
         </article>
-
-        <aside class="sidebar">
-          ${a.related?.length ? `
-            <div class="sidebar-widget">
-              <h3>📌 Related Articles</h3>
-              ${a.related.map(r => renderMiniCard(r)).join('')}
-            </div>` : ''}
-          ${renderCategoryWidget()}
-        </aside>
       </div>
     `;
+
   } catch (e) {
-    document.getElementById('mainContent').innerHTML = renderError('Article not found.');
+    document.getElementById('mainContent').innerHTML = 'Article not found';
   }
 }
-
 function renderMiniCard(a) {
   return `
     <div onclick="navigate('article','${a.slug}')" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity 0.2s" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
@@ -1130,21 +1069,11 @@ function populateArticleCategorySelect(selectedId = '') {
 async function handleSaveArticle(e) {
   e.preventDefault();
 
-  const getVal = (id) => {
-    const el = document.getElementById(id);
-    return el ? el.value : '';
-  };
+  const getVal = (id) => document.getElementById(id)?.value || '';
+  const getCheck = (id) => document.getElementById(id)?.checked || false;
 
-  const getCheck = (id) => {
-    const el = document.getElementById(id);
-    return el ? el.checked : false;
-  };
-
-  // ✅ Get category properly (IMPORTANT FIX)
   const categorySelect = document.getElementById('articleCategory');
-  const categoryValue = categorySelect
-    ? categorySelect.options[categorySelect.selectedIndex].text.toLowerCase()
-    : '';
+  const categoryValue = categorySelect ? categorySelect.value : '';
 
   let content = getVal('articleContent');
   content = content.replace(/<[^>]*>/g, '').trim();
@@ -1152,20 +1081,12 @@ async function handleSaveArticle(e) {
   const body = {
     title: getVal('articleTitle').trim(),
     subheading: getVal('articleSubheading'),
-
-    // ✅ FIXED CATEGORY (ONLY ONE)
-    category_id: categoryValue,
-
+    category_id: categoryValue, // ✅ FIXED
     content: content,
     cover_image: getVal('articleImage'),
     video: getVal('articleVideo'),
     excerpt: getVal('articleExcerpt'),
-
-    tags: getVal('articleTags')
-      ?.split(',')
-      .map(t => t.trim())
-      .filter(Boolean) || [],
-
+    tags: getVal('articleTags').split(',').map(t => t.trim()).filter(Boolean),
     is_featured: getCheck('articleFeatured'),
     is_breaking: getCheck('articleBreaking'),
     status: getVal('articleStatus') || 'published',
@@ -1177,34 +1098,29 @@ async function handleSaveArticle(e) {
     let r;
 
     if (slug) {
-      // UPDATE
       r = await apiFetch(`/news/slug/${slug}`, {
         method: 'PUT',
         body: JSON.stringify(body),
       });
     } else {
-      // CREATE
       r = await apiFetch('/news', {
         method: 'POST',
         body: JSON.stringify(body),
       });
     }
 
-    const data = await r.json();
-
     if (r.ok) {
-      showToast(slug ? 'Article updated!' : 'Article added!', 'success');
+      alert('Saved successfully');
       renderAdminPage('articles');
     } else {
-      showToast(data.error || 'Failed', 'error');
+      alert('Error saving');
     }
 
   } catch (err) {
     console.error(err);
-    showToast('Server error', 'error');
+    alert('Server error');
   }
 }
-
 // ── Auth ──────────────────────────────────────────────────────────────────
 async function handleLogin(e) {
   e.preventDefault();
