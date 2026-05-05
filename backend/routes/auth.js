@@ -57,10 +57,3 @@ router.put('/password', auth, async (req, res) => {
 });
 
 module.exports = router;
-  const user = db.prepare('SELECT password FROM users WHERE id = ?').get(req.user.id);
-  if (!bcrypt.compareSync(current, user.password)) return res.status(400).json({ error: 'Current password incorrect' });
-  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(newPassword, 10), req.user.id);
-  res.json({ message: 'Password changed' });
-});
-
-module.exports = router;
