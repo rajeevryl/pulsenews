@@ -21,8 +21,16 @@ const PORT = process.env.PORT || 3000;
 
 // ✅ CONNECT DB FIRST
 connectDB().then(async () => {
-  // Seed data
-  await seedData();
+  console.log('🚀 Starting server...');
+  // Seed data (optional)
+  try {
+    await seedData();
+  } catch (err) {
+    console.warn('⚠️ Seeding failed, but continuing:', err.message);
+  }
+}).catch(err => {
+  console.error('❌ Database connection failed:', err.message);
+  process.exit(1);
 });
 
 const seedData = async () => {
