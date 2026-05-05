@@ -277,7 +277,7 @@ Edit `frontend/public/css/style.css` — change the `:root` CSS variables at the
 |-------|-----------|
 | Frontend | Vanilla HTML, CSS, JavaScript (SPA) |
 | Backend | Node.js + Express.js |
-| Database | SQLite (via better-sqlite3) |
+| Database | MongoDB (via Mongoose) |
 | Auth | JWT (JSON Web Tokens) |
 | Styling | Custom CSS with CSS Variables |
 | Fonts | Google Fonts (Playfair Display, Source Sans 3) |
@@ -286,7 +286,7 @@ Edit `frontend/public/css/style.css` — change the `:root` CSS variables at the
 
 ## 📞 Support
 
-- The database (`news.db`) is created automatically on first run
+- The app uses MongoDB and requires `MONGO_URL` in your environment
 - All sample articles and categories are seeded automatically
 - The admin can write, edit, delete articles from the panel
-- No external database needed — SQLite is built-in!
+- Use MongoDB Atlas or a local MongoDB instance for production
